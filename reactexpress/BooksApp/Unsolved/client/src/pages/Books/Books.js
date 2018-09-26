@@ -4,6 +4,7 @@ import DeleteBtn from "../../components/DeleteBtn";
 import { Col, Row, Container } from "../../components/Grid";
 import { List, ListItem } from "../../components/List";
 import { Input, TextArea, FormBtn } from "../../components/Form";
+import API from "../../utils/API";
 
 class Books extends Component {
   // Initialize this.state.books as an empty array
@@ -11,7 +12,42 @@ class Books extends Component {
     books: []
   };
 
-  // Add code here to get all books from the database and save them to this.state.books
+  handleInputChange = event => {
+    const {name, value } = event.target;
+    this.setState(
+      { [name]: value }
+    );
+  };
+
+  handleFormSubmit = event => {
+    event.preventDefault();
+    if (this.state.title && this.state.author) {
+    API.saveBook({
+      title: this.state.title,
+      author: this.state.author,
+      synopsis: this.state.synopsis
+    })
+    .then(res => this.loadBooks())
+    .catch(err => console.log(err))
+    }
+  }
+
+  componentDidMount() {
+    this.loadBooks()
+  };
+
+  loadBooks() {
+    API.getBooks()
+    .then(res => {
+      this.setState({ books: res.data})
+    })
+  };
+
+  handleDelete(id) {
+    console.log(id)
+    API.deleteBook(id);
+    this.loadBooks()
+  } 
 
   render() {
     return (
@@ -22,10 +58,10 @@ class Books extends Component {
               <h1>What Books Should I Read?</h1>
             </Jumbotron>
             <form>
-              <Input name="title" placeholder="Title (required)" />
-              <Input name="author" placeholder="Author (required)" />
-              <TextArea name="synopsis" placeholder="Synopsis (Optional)" />
-              <FormBtn>Submit Book</FormBtn>
+              <Input onChange={this.handleInputChange} name="title" placeholder="Title (required)" />
+              <Input onChange={this.handleInputChange} name="author" placeholder="Author (required)" />
+              <TextArea onChange={this.handleInputChange} name="synopsis" placeholder="Synopsis (Optional)" />
+              <FormBtn onClick={this.handleFormSubmit}>Submit Book</FormBtn>
             </form>
           </Col>
           <Col size="md-6 sm-12">
@@ -41,7 +77,7 @@ class Books extends Component {
                         {book.title} by {book.author}
                       </strong>
                     </a>
-                    <DeleteBtn />
+                    <DeleteBtn onClick={event => this.handleDelete(book._id)}/>
                   </ListItem>
                 ))}
               </List>
